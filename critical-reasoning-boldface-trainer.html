@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Premise vs conclusion sorter</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+  }
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    line-height: 1.35;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #6b6b66;
+    margin: 0 0 16px;
+  }
+  details.info {
+    background: #f7f7f4;
+    border: 1px solid #dcdcd5;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  details.info summary {
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+  }
+  details.info summary::-webkit-details-marker { display: none; }
+  details.info summary::before {
+    content: "▸ ";
+  }
+  details.info[open] summary::before {
+    content: "▾ ";
+  }
+  details.info .body { margin-top: 10px; color: #333; }
+  details.info .body p { margin: 0 0 10px; }
+  details.info .body p:last-child { margin-bottom: 0; }
+
+  .stats-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #6b6b66;
+    margin-bottom: 8px;
+  }
+  .progress-track {
+    height: 8px;
+    background: #ececec;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #0c447c;
+    transition: width .3s ease;
+  }
+
+  .card {
+    background: #f7f7f4;
+    border: 2px solid #dcdcd5;
+    border-radius: 16px;
+    padding: 48px 20px;
+    text-align: center;
+    margin-bottom: 18px;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .2s ease, background-color .2s ease;
+  }
+  .card .term {
+    font-size: 23px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .feedback {
+    min-height: 44px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 18px;
+    padding: 0 8px;
+    font-weight: 500;
+  }
+  .feedback.ok { color: #27500a; }
+  .feedback.bad { color: #791f1f; }
+
+  .options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 10px;
+  }
+  .opt-btn {
+    border: 2px solid;
+    border-radius: 12px;
+    padding: 16px 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #ffffff;
+    transition: transform .1s ease, background-color .15s ease;
+    line-height: 1.3;
+  }
+  .opt-btn:active { transform: scale(0.97); }
+  .opt-btn:disabled { cursor: default; opacity: 0.55; }
+  .opt-btn:disabled.correct-flash,
+  .opt-btn:disabled.wrong-flash { opacity: 1; }
+
+  .opt-btn.nc { border-color: #97c459; color: #27500a; }
+  .opt-btn.cp { border-color: #ef9f27; color: #854f0b; }
+  .opt-btn.c  { border-color: #85b7eb; color: #0c447c; }
+
+  .opt-btn.correct-flash { background: #eaf3de; border-color: #639922; color: #173404; }
+  .opt-btn.wrong-flash   { background: #fcebeb; border-color: #e24b4a; color: #501313; }
+
+  .next-btn {
+    display: none;
+    width: 100%;
+    margin-top: 14px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 12px;
+    border: 2px solid #1a1a1a;
+    background: #1a1a1a;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  .next-btn:active { transform: scale(0.98); }
+
+  .done-area {
+    display: none;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .done-area p.title { font-size: 18px; font-weight: 600; margin: 0 0 8px; }
+  .done-area p.sub { font-size: 14px; color: #6b6b66; margin: 0 0 20px; line-height: 1.5; }
+  .replay-btn {
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    border: 2px solid #1a1a1a;
+    background: #ffffff;
+    color: #1a1a1a;
+    cursor: pointer;
+  }
+
+  @media (max-width: 480px) {
+    .container { padding: 20px 14px 48px; }
+    h1 { font-size: 18px; }
+    .card { padding: 34px 14px; }
+    .card .term { font-size: 19px; }
+    .options { grid-template-columns: 1fr; }
+    .opt-btn { padding: 14px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Premise vs conclusion sorter</h1>
+  <p class="subtitle">Read the term, pick its bucket. Missed ones come back around.</p>
+
+  <details class="info">
+    <summary>Why these three buckets?</summary>
+    <div class="body">
+      <p>Picture a courtroom. The detective brings the exhibit: fact, data, evidence, research, proof, observation, a pattern already seen. Nobody argues with the exhibit &mdash; that's the <strong>non-challengeable premise</strong>.</p>
+      <p>The lawyer stands up with the argument: reason, justification, support, supposition, policy, a generalization about what's already true. You can push back on this one &mdash; that's the <strong>challengeable premise</strong>.</p>
+      <p>The judge hands down the verdict: opinion, claim, prediction, position, a generalization about what's coming. It's the forward-looking endpoint &mdash; that's the <strong>conclusion</strong>.</p>
+      <p>One trap: "pattern" and "generalization" each show up in two buckets depending on tense. Past or present observed &rarr; premise. Future or predicted &rarr; conclusion. That's a judgment call about context, not something drilling the word alone fixes.</p>
+    </div>
+  </details>
+
+  <div class="stats-row">
+    <span id="progress-label">Mastered 0 / 50</span>
+    <span id="accuracy-label">Accuracy —</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-bar"></div>
+  </div>
+
+  <div class="card" id="card-area">
+    <span class="term" id="term-text"></span>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+  <div class="options" id="options-area">
+    <button class="opt-btn nc" id="btn-NC">Non-challengeable premise</button>
+    <button class="opt-btn cp" id="btn-CP">Challengeable premise</button>
+    <button class="opt-btn c" id="btn-C">Conclusion</button>
+  </div>
+
+  <div class="done-area" id="done-area">
+    <p class="title">All 50 mastered</p>
+    <p class="sub">Come back tomorrow and run it again cold, then again in a few days. That's what actually locks it in long-term.</p>
+    <button class="replay-btn" id="replay-btn">Play again</button>
+  </div>
+</div>
+
+<script>
+const DATA = [
+  ["Fact","NC"],["Truth","NC"],["Data","NC"],["Evidence","NC"],["Information","NC"],
+  ["Situation","NC"],["Circumstance","NC"],["Research","NC"],["Proof","NC"],["Observation","NC"],
+  ["Example","NC"],["Finding","NC"],["Phenomenon","NC"],["Illustration","NC"],["Pattern (past/present)","NC"],
+  ["Reason","CP"],["Justification","CP"],["Reasoning","CP"],["Explanation","CP"],["Line of reasoning","CP"],
+  ["Support","CP"],["Statement of support","CP"],["Supposition","CP"],["Consideration","CP"],["Policy","CP"],
+  ["Practice","CP"],["Generalization (past/present)","CP"],["Judgment in support","CP"],["Acknowledgement","CP"],
+  ["Judgment reached","C"],["Opinion","C"],["Suggestion","C"],["View","C"],["Idea","C"],
+  ["Belief","C"],["Proposal","C"],["Warning","C"],["Forecast","C"],["Claim","C"],
+  ["Stand","C"],["Prediction","C"],["Hypothesis","C"],["Position (to posit)","C"],["Stance","C"],
+  ["Point","C"],["Main point","C"],["Generalization (future)","C"],["Contention","C"],["Consequence","C"],
+  ["Pattern (predicted/future)","C"]
+];
+const LABELS = { NC: "Non-challengeable premise", CP: "Challengeable premise", C: "Conclusion" };
+const TOTAL = DATA.length;
+
+let queue = [];
+let mastered = new Set();
+let attempts = 0, correct = 0;
+let current = null;
+let locked = false;
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function init() {
+  queue = shuffle(DATA.map((_, i) => i));
+  mastered = new Set();
+  attempts = 0; correct = 0;
+  document.getElementById('done-area').style.display = 'none';
+  document.getElementById('card-area').style.display = 'flex';
+  document.getElementById('options-area').style.display = 'grid';
+  ['btn-NC','btn-CP','btn-C'].forEach(id => {
+    const b = document.getElementById(id);
+    b.disabled = false;
+    b.classList.remove('correct-flash','wrong-flash');
+  });
+  updateStats();
+  nextCard();
+}
+
+function updateStats() {
+  document.getElementById('progress-label').textContent = 'Mastered ' + mastered.size + ' / ' + TOTAL;
+  document.getElementById('progress-bar').style.width = Math.round((mastered.size / TOTAL) * 100) + '%';
+  const acc = attempts ? Math.round((correct / attempts) * 100) : null;
+  document.getElementById('accuracy-label').textContent = acc === null ? 'Accuracy —' : ('Accuracy ' + acc + '%');
+}
+
+function nextCard() {
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  ['btn-NC','btn-CP','btn-C'].forEach(id => {
+    const b = document.getElementById(id);
+    b.disabled = false;
+    b.classList.remove('correct-flash','wrong-flash');
+  });
+
+  if (mastered.size >= TOTAL) {
+    document.getElementById('card-area').style.display = 'none';
+    document.getElementById('options-area').style.display = 'none';
+    document.getElementById('done-area').style.display = 'block';
+    return;
+  }
+  const idx = queue.find(i => !mastered.has(i));
+  current = idx;
+  document.getElementById('term-text').textContent = DATA[idx][0];
+  document.getElementById('card-area').style.borderColor = '#dcdcd5';
+  locked = false;
+}
+
+function answer(choice) {
+  if (locked) return;
+  locked = true;
+  attempts++;
+  const correctCat = DATA[current][1];
+  const fb = document.getElementById('feedback');
+  const cardArea = document.getElementById('card-area');
+  const btnMap = { NC: 'btn-NC', CP: 'btn-CP', C: 'btn-C' };
+
+  ['btn-NC','btn-CP','btn-C'].forEach(id => document.getElementById(id).disabled = true);
+
+  if (choice === correctCat) {
+    correct++;
+    cardArea.style.borderColor = '#639922';
+    fb.className = 'feedback ok';
+    fb.textContent = 'Correct — ' + LABELS[correctCat];
+    document.getElementById(btnMap[choice]).classList.add('correct-flash');
+    mastered.add(current);
+    queue = queue.filter(i => i !== current);
+  } else {
+    cardArea.style.borderColor = '#e24b4a';
+    fb.className = 'feedback bad';
+    fb.textContent = 'That was ' + LABELS[choice] + '. It is actually ' + LABELS[correctCat] + '.';
+    document.getElementById(btnMap[choice]).classList.add('wrong-flash');
+    document.getElementById(btnMap[correctCat]).classList.add('correct-flash');
+    queue = queue.filter(i => i !== current);
+    const insertAt = Math.min(queue.length, 4);
+    queue.splice(insertAt, 0, current);
+  }
+  updateStats();
+  setTimeout(nextCard, 2200);
+}
+
+document.getElementById('btn-NC').addEventListener('click', () => answer('NC'));
+document.getElementById('btn-CP').addEventListener('click', () => answer('CP'));
+document.getElementById('btn-C').addEventListener('click', () => answer('C'));
+document.getElementById('replay-btn').addEventListener('click', init);
+
+init();
+</script>
+</body>
+</html>
