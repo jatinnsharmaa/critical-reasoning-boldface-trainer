@@ -317,7 +317,7 @@ function answer(choice) {
   } else {
     cardArea.style.borderColor = '#e24b4a';
     fb.className = 'feedback bad';
-    fb.textContent = 'Incorrect — you picked ' + LABELS[choice] + '; it\'s ' + LABELS[correctCat];
+    fb.textContent = 'Incorrect — it\'s ' + LABELS[correctCat] + '; you picked ' + LABELS[choice];
     document.getElementById(btnMap[choice]).classList.add('wrong-flash');
     document.getElementById(btnMap[correctCat]).classList.add('correct-flash');
     queue = queue.filter(i => i !== current);
