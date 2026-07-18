@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Premise vs conclusion sorter</title>
+<title>Premise vs Conclusion sorter</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -178,7 +178,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>Premise vs conclusion sorter</h1>
+  <h1>Premise vs Conclusion sorter</h1>
   <p class="subtitle">Read the term, pick its bucket. Missed ones come back around.</p>
 
   <details class="info">
@@ -317,7 +317,7 @@ function answer(choice) {
   } else {
     cardArea.style.borderColor = '#e24b4a';
     fb.className = 'feedback bad';
-    fb.textContent = 'That was ' + LABELS[choice] + '. It is actually ' + LABELS[correctCat] + '.';
+    fb.textContent = 'Incorrect — you picked ' + LABELS[choice] + '; it\'s ' + LABELS[correctCat];
     document.getElementById(btnMap[choice]).classList.add('wrong-flash');
     document.getElementById(btnMap[correctCat]).classList.add('correct-flash');
     queue = queue.filter(i => i !== current);
